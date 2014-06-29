@@ -1,6 +1,30 @@
+/*
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2014
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package com.burntpizza.attractive;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
+
+import java.awt.image.*;
 
 public class RenderJob {
 	
@@ -20,23 +44,23 @@ public class RenderJob {
 	}
 	
 	public Frame render(BufferedImage buffer) {
-		int[] data = ((DataBufferInt) buffer.getRaster().getDataBuffer()).getData();
+		final int[] data = ((DataBufferInt) buffer.getRaster().getDataBuffer()).getData();
 		
 		final int w4 = w / 4;
 		final int h4 = h / 4;
 		
 		for (int i = 0; i < iterations; i++) {
 			current.update();
-			double dx = current.x - current.px;
-			double dy = current.y - current.py;
+			final double dx = current.x - current.px;
+			final double dy = current.y - current.py;
 			double dist = dx * dx + dy * dy;
 			dist *= 150;
 			dist += 50;
-			int rr = (int) Math.min(255, dist);
+			final int rr = (int) Math.min(255, dist);
 			dist /= 2;
-			int gr = (int) Math.min(255, dist);
+			final int gr = (int) Math.min(255, dist);
 			dist /= 2;
-			int br = (int) Math.min(255, dist);
+			final int br = (int) Math.min(255, dist);
 			final int x = (int) Math.round(current.x * (w4 - 10)) + w4 * 2;
 			final int y = (int) Math.round(current.y * (h4 - 10)) + h4 * 2;
 			final int index = x + y * buffer.getWidth();

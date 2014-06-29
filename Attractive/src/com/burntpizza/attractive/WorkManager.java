@@ -1,4 +1,29 @@
+/*
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2014
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package com.burntpizza.attractive;
+
 import java.awt.image.BufferedImage;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,13 +33,13 @@ public class WorkManager {
 	public static final int MIN_QUEUED_JOBS = 16;
 	public static final int MAX_QUEUED_JOBS = 28;
 	
-	private BIPool pool;
+	private final BIPool pool;
 	JobFactory factory;
-	private PriorityBlockingQueue<Frame> finishedFrames;
-	private ExecutorService exec;
+	private final PriorityBlockingQueue<Frame> finishedFrames;
+	private final ExecutorService exec;
 	
-	private AtomicInteger finishedJobCount;
-	private AtomicInteger queuedJobCount;
+	private final AtomicInteger finishedJobCount;
+	private final AtomicInteger queuedJobCount;
 	
 	public WorkManager(JobFactory factory) {
 		pool = new BIPool(factory.width, factory.height);
@@ -32,13 +57,13 @@ public class WorkManager {
 		}
 		try {
 			synchronized (finishedFrames) {
-				Frame f = finishedFrames.take();
-				BufferedImage i = f.image;
+				final Frame f = finishedFrames.take();
+				final BufferedImage i = f.image;
 				finishedJobCount.getAndDecrement();
 				finishedFrames.notify();
 				return i;
 			}
-		} catch (InterruptedException e) {
+		} catch (final InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -71,7 +96,7 @@ public class WorkManager {
 			while (finishedJobCount.get() > MAX_QUEUED_JOBS) {
 				try {
 					finishedFrames.wait();
-				} catch (InterruptedException e) {
+				} catch (final InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
