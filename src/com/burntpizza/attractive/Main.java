@@ -24,12 +24,14 @@
  */
 package com.burntpizza.attractive;
 
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class Main {
 	
-	public static final int WIDTH = 512, HEIGHT = 512;
+	public static final int WIDTH = 800, HEIGHT = 600;
 	public static final int ITERATIONS_PER_FRAME = 600_000;
+	public static final int FRAMES_PER_SECOND = 30;
 	public static final double AIncrement = 0.001;
 	public static final double BIncrement = 0.001;
 	public static final double CIncrement = 0;
@@ -37,7 +39,7 @@ public class Main {
 	
 	public static void main(String[] a) {
 		final JobFactory factory = new JobFactory(WIDTH, HEIGHT, DeJongAttractor.rand(), ITERATIONS_PER_FRAME, AIncrement, BIncrement, CIncrement, DIncrement);
-		final RenderFrame frame = new RenderFrame(new WorkManager(factory));
+		final RenderFrame frame = new RenderFrame(new WorkManager(factory), FRAMES_PER_SECOND);
 		
 		frame.addMouseListener(new MouseAdapter() {
 			@Override

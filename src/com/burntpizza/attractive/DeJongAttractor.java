@@ -42,7 +42,7 @@ public class DeJongAttractor {
 		px = x;
 		py = y;
 		x = Math.sin(a * y) - Math.cos(b * x);
-		y = Math.sin(c * x) - Math.cos(d * y);
+		y = Math.sin(c * px) - Math.cos(d * y);
 	}
 	
 	public static DeJongAttractor rand() {
