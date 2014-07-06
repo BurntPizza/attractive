@@ -24,7 +24,8 @@
  */
 package com.burntpizza.attractive;
 
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 
 public class RenderJob {
 	
@@ -53,26 +54,17 @@ public class RenderJob {
 			current.update();
 			final double dx = current.x - current.px;
 			final double dy = current.y - current.py;
-			double dist = dx * dx + dy * dy;
-			dist *= 150;
-			dist += 50;
-			final int rr = (int) Math.min(255, dist);
-			dist /= 2;
-			final int gr = (int) Math.min(255, dist);
-			dist /= 2;
-			final int br = (int) Math.min(255, dist);
+			final int dist = (int) ((dx * dx + dy * dy) * 150) + 50;
+			final int rr = Math.min(255, dist);
+			final int gr = Math.min(255, dist >> 1);
+			final int br = Math.min(255, dist >> 2);
 			final int x = (int) Math.round(current.x * (w4 - 10)) + w4 * 2;
 			final int y = (int) Math.round(current.y * (h4 - 10)) + h4 * 2;
 			final int index = x + y * buffer.getWidth();
 			final int prev = data[index];
-			int red = prev & 0xFF0000;
-			int green = prev & 0xFF00;
-			int blue = prev & 0xFF;
-			red >>= 16;
-			green >>= 8;
-			red = Math.min(255, red + (rr >> 4));
-			green = Math.min(255, green + (gr >> 4));
-			blue = Math.min(255, blue + (br >> 4));
+			final int red = Math.min(255, ((prev & 0xFF0000) >> 16) + (rr >> 4));
+			final int green = Math.min(255, ((prev & 0xFF00) >> 8) + (gr >> 4));
+			final int blue = Math.min(255, (prev & 0xFF) + (br >> 4));
 			data[index] = red << 16 | green << 8 | blue;
 		}
 		return new Frame(buffer, number);
