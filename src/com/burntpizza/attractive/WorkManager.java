@@ -62,7 +62,7 @@ public class WorkManager {
 				final Frame f = finishedFrames.take();
 				final BufferedImage i = f.image;
 				finishedJobCount.getAndDecrement();
-				finishedFrames.notify();
+				finishedFrames.notifyAll();
 				return i;
 			}
 		} catch (final InterruptedException e) {

@@ -44,7 +44,6 @@ public class RenderFrame extends JFrame implements Runnable {
 		this.manager = manager;
 		this.targetFPS = targetFPS;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		//setUndecorated(true);
 		canvas = new JComponent() {
 			{
 				setSize(manager.factory.width, manager.factory.height);
@@ -62,7 +61,6 @@ public class RenderFrame extends JFrame implements Runnable {
 		final Dimension ss = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(ss.width / 2 - getWidth() / 2, ss.height / 2 - getHeight() / 2);
 		setVisible(true);
-		//GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(this);
 		new Thread(this).start();
 	}
 	
