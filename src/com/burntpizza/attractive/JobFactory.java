@@ -59,10 +59,8 @@ public class JobFactory {
 	}
 	
 	public RenderJob getNextJob() {
-		synchronized (init) {
-			for (int i = 0; i < init.length; i++)
-				init[i] += inc[i];
-		}
+		for (int i = 0; i < init.length; i++)
+			init[i] += inc[i];
 		return new RenderJob(width, height, init[0], init[1], init[2], init[3], iterations, counter.getAndIncrement());
 	}
 }

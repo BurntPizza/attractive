@@ -29,13 +29,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class WorkManager {
 	
-	public static final int MIN_QUEUED_JOBS = 16;
-	public static final int MAX_QUEUED_JOBS = 28;
+	public final int MIN_QUEUED_JOBS;
+	public final int MAX_QUEUED_JOBS;
 	
-	private final BIPool pool;
+	private final Pool pool;
 	JobFactory factory;
 	private final PriorityBlockingQueue<Frame> finishedFrames;
 	private final ExecutorService exec;
@@ -43,29 +46,44 @@ public class WorkManager {
 	private final AtomicInteger finishedJobCount;
 	private final AtomicInteger queuedJobCount;
 	
+	private final Lock lock;
+	private final Condition queueFull;
+	
 	public WorkManager(JobFactory factory) {
-		pool = new BIPool(factory.width, factory.height);
-		this.factory = factory;
+		final int numThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+		MIN_QUEUED_JOBS = numThreads + 1;
+		MAX_QUEUED_JOBS = MIN_QUEUED_JOBS * 2;
+		
 		finishedFrames = new PriorityBlockingQueue<>(MAX_QUEUED_JOBS, Frame.Comparator.INSTANCE);
-		exec = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
+		exec = Executors.newFixedThreadPool(numThreads);
+		pool = new Pool(factory.width, factory.height);
 		finishedJobCount = new AtomicInteger();
 		queuedJobCount = new AtomicInteger();
+		this.factory = factory;
+		lock = new ReentrantLock();
+		queueFull = lock.newCondition();
 	}
 	
 	public BufferedImage getNextFrame() {
-		if (finishedJobCount.get() < MIN_QUEUED_JOBS) {
-			for (int i = 0; i < MAX_QUEUED_JOBS - queuedJobCount.get(); i++, queuedJobCount.getAndIncrement())
-				exec.submit(new Worker(factory.getNextJob()));
+		
+		while (queuedJobCount.get() < MIN_QUEUED_JOBS) {
+			exec.execute(new Worker(factory.getNextJob()));
+			queuedJobCount.getAndIncrement();
 		}
+		
 		try {
-			synchronized (finishedFrames) {
-				final Frame f = finishedFrames.take();
-				final BufferedImage i = f.image;
-				finishedJobCount.getAndDecrement();
-				finishedFrames.notifyAll();
-				return i;
+			final BufferedImage i = finishedFrames.take().image;
+			finishedJobCount.getAndDecrement();
+			
+			lock.lock();
+			try {
+				queueFull.signalAll();
+			} finally {
+				lock.unlock();
 			}
-		} catch (final InterruptedException e) {
+			
+			return i;
+		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -75,14 +93,16 @@ public class WorkManager {
 	}
 	
 	public Status getStatus() {
-		return new Status(finishedJobCount.get());
+		return new Status(finishedJobCount.get(), queuedJobCount.get());
 	}
 	
 	public static class Status {
-		public final int queueSize;
+		public final int numFinished;
+		public final int numQueued;
 		
-		private Status(int queueSize) {
-			this.queueSize = queueSize;
+		private Status(int numFinished, int numQueued) {
+			this.numFinished = numFinished;
+			this.numQueued = numQueued;
 		}
 	}
 	
@@ -95,13 +115,16 @@ public class WorkManager {
 		
 		@Override
 		public void run() {
-			while (finishedJobCount.get() > MAX_QUEUED_JOBS) {
-				try {
-					finishedFrames.wait();
-				} catch (final InterruptedException e) {
-					e.printStackTrace();
+			
+			lock.lock();
+			try {
+				while (finishedJobCount.get() > MAX_QUEUED_JOBS) {
+					queueFull.awaitUninterruptibly();
 				}
+			} finally {
+				lock.unlock();
 			}
+			
 			queuedJobCount.getAndDecrement();
 			finishedFrames.add(job.render(pool.get()));
 			finishedJobCount.getAndIncrement();

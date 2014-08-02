@@ -32,6 +32,8 @@ import java.awt.image.BufferedImage;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
+import com.burntpizza.attractive.WorkManager.Status;
+
 @SuppressWarnings("serial")
 public class RenderFrame extends JFrame implements Runnable {
 	
@@ -80,13 +82,16 @@ public class RenderFrame extends JFrame implements Runnable {
 			manager.returnImage(currentFrame);
 			
 			fpsCounter++;
+			
 			if (System.currentTimeMillis() - lastSec > 1000) {
 				lastSec += 1000;
 				fps = fpsCounter;
 				fpsCounter = 0;
 			}
 			
-			setTitle("FPS: " + fps + (manager.getStatus().queueSize < 2 ? " MAXED OUT, decrease FPS target" : ""));
+			Status s = manager.getStatus();
+			setTitle("FPS: " + fps + (s.numFinished < 2 ? " MAXED OUT, decrease FPS target" : "") + " Finished: " + s.numFinished + " Queued: " + s.numQueued);
+			
 			try {
 				while (System.nanoTime() - time < sleep) {
 					Thread.sleep(1);

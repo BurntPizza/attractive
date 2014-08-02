@@ -24,32 +24,50 @@
  */
 package com.burntpizza.attractive;
 
-import java.awt.Color;
-import java.awt.image.*;
-import java.util.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class BIPool {
+public class Pool {
 	
 	private final int w, h;
-	private final Stack<BufferedImage> storage = new Stack<>();
+	private final int[] blank;
+	private final Deque<BufferedImage> storage = new ArrayDeque<>(64);
 	
-	public BIPool(int width, int height) {
+	public Pool(int width, int height) {
 		w = width;
 		h = height;
+		blank = new int[w * h];
 	}
 	
 	public BufferedImage get() {
-		if (!storage.isEmpty()) {
-			final BufferedImage i = storage.pop();
-			final int[] data = ((DataBufferInt) i.getRaster().getDataBuffer()).getData();
-			Arrays.fill(data, Color.BLACK.getRGB());
-			return i;
+		
+		BufferedImage image = null;
+		boolean wasEmpty = false;
+		
+		synchronized (storage) {
+			if (storage.isEmpty())
+				wasEmpty = true;
+			else
+				image = storage.pop();
 		}
-		return new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		
+		if (wasEmpty)
+			image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		else {
+			final int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+			System.arraycopy(blank, 0, data, 0, blank.length);
+		}
+		
+		return image;
 	}
 	
 	public void put(BufferedImage img) {
-		storage.push(img);
+		synchronized (storage) {
+			storage.push(img);
+		}
 	}
 	
 	public int size() {
