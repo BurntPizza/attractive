@@ -29,8 +29,8 @@ import java.awt.event.MouseEvent;
 
 public class Main {
 	
-	public static final int WIDTH = 1920, HEIGHT = 1080;
-	public static final int ITERATIONS_PER_FRAME = 600_000;
+	public static final int WIDTH = 800, HEIGHT = 600;
+	public static final int ITERATIONS_PER_FRAME = 400_000;
 	public static final int FRAMES_PER_SECOND = 30;
 	public static final double AIncrement = 0.001;
 	public static final double BIncrement = 0.001;

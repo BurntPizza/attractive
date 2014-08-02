@@ -28,18 +28,21 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Pool {
 	
-	private final int w, h;
 	private final int[] blank;
+	private final Lock lock;
 	private final Deque<BufferedImage> storage = new ArrayDeque<>(64);
+	private final int w, h;
 	
 	public Pool(int width, int height) {
 		w = width;
 		h = height;
 		blank = new int[w * h];
+		lock = new ReentrantLock();
 	}
 	
 	public BufferedImage get() {
@@ -47,16 +50,20 @@ public class Pool {
 		BufferedImage image = null;
 		boolean wasEmpty = false;
 		
-		synchronized (storage) {
+		lock.lock();
+		try {
 			if (storage.isEmpty())
 				wasEmpty = true;
 			else
 				image = storage.pop();
+		} finally {
+			lock.unlock();
 		}
 		
 		if (wasEmpty)
 			image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 		else {
+			@SuppressWarnings("null")
 			final int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 			System.arraycopy(blank, 0, data, 0, blank.length);
 		}
@@ -65,8 +72,11 @@ public class Pool {
 	}
 	
 	public void put(BufferedImage img) {
-		synchronized (storage) {
+		lock.lock();
+		try {
 			storage.push(img);
+		} finally {
+			lock.unlock();
 		}
 	}
 	
