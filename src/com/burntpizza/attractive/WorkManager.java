@@ -39,7 +39,7 @@ public class WorkManager {
 	public final int MAX_QUEUED_JOBS;
 	
 	private final Pool pool;
-	JobFactory factory;
+	private final JobFactory factory;
 	private final PriorityBlockingQueue<Frame> finishedFrames;
 	private final ExecutorService exec;
 	
@@ -85,6 +85,25 @@ public class WorkManager {
 			return i;
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
+		}
+	}
+	
+	public int getFrameWidth() {
+		return factory.width;
+	}
+	
+	public int getFrameHeight() {
+		return factory.height;
+	}
+	
+	public void clearQueue() {
+		lock.lock();
+		try {
+			finishedFrames.clear();
+			finishedJobCount.set(0);
+			queueFull.signalAll();
+		} finally {
+			lock.unlock();
 		}
 	}
 	

@@ -48,7 +48,7 @@ public class RenderFrame extends JFrame implements Runnable {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		canvas = new JComponent() {
 			{
-				setSize(manager.factory.width, manager.factory.height);
+				setSize(manager.getFrameWidth(), manager.getFrameHeight());
 				setPreferredSize(getSize());
 			}
 			
@@ -72,19 +72,20 @@ public class RenderFrame extends JFrame implements Runnable {
 		
 		int fpsCounter = 0;
 		int fps = 0;
-		long lastSec = System.currentTimeMillis();
+		long lastSec = System.nanoTime();
 		
 		while (true) {
 			final long time = System.nanoTime();
 			
 			currentFrame = manager.getNextFrame();
+			
 			canvas.paintImmediately(0, 0, canvas.getWidth(), canvas.getHeight());
 			manager.returnImage(currentFrame);
 			
 			fpsCounter++;
 			
-			if (System.currentTimeMillis() - lastSec > 1000) {
-				lastSec += 1000;
+			if (System.nanoTime() - lastSec > 1000000000) {
+				lastSec += 1000000000;
 				fps = fpsCounter;
 				fpsCounter = 0;
 			}
